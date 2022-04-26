@@ -1,0 +1,190 @@
+---
+title: "final-assignment"
+author: "Eray Ferah"
+date: "26 04 2022"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r technical details for the analysis, echo = FALSE}
+library(ggplot2)
+library(lmtest)
+library(scales)
+library(lubridate)
+library(stargazer)
+library(readxl)
+
+print(getwd())
+
+# Import data
+df_dis <- read_excel("disney.xlsx")
+df_dis <- as.data.frame(df_dis)
+df_ge <- read_excel("ge.xlsx")
+df_ge <- as.data.frame(df_ge)
+
+######define date
+df_dis$Date <- as.Date(paste(df_dis$date, 1), "%Ym%m %d")
+df_ge$Date <- as.Date(paste(df_ge$date, 1), "%Ym%m %d")
+
+```
+
+## Plotting Prices
+
+```{r , echo = FALSE}
+##### Plot prices #####
+ggplot(data = df_dis) +
+  geom_line(aes(x = Date, y = disney),
+            color = "blue",
+            size = 0.6) +
+  labs(x = "Date",
+       y = "Disney Price") +
+  scale_x_date(date_breaks = "3 years", labels = date_format("%Y %b")) +
+  theme_minimal()+
+  theme_bw()+
+  theme(panel.grid =element_blank())+
+  theme(axis.title.x = element_text(size =12))+
+  theme(axis.title.y = element_text(size =12))+
+  theme(axis.text.x = element_text(size =6))+
+  theme(axis.text.y = element_text(size =12))
+
+ggplot(data = df_ge) +
+  geom_line(aes(x = Date, y = ge),
+            color = "blue",
+            size = 0.6) +
+  labs(x = "Date",
+       y = "GE Price") +
+  scale_x_date(date_breaks = "3 years", labels = date_format("%Y %b")) +
+  theme_minimal()+
+  theme_bw()+
+  theme(panel.grid =element_blank())+
+  theme(axis.title.x = element_text(size =12))+
+  theme(axis.title.y = element_text(size =12))+
+  theme(axis.text.x = element_text(size =6))+
+  theme(axis.text.y = element_text(size =12))
+```
+
+
+```{r Calculate returns, echo = FALSE}
+##### Calculate returns #####
+
+df_dis$Return <- 0
+df_ge$Return <- 0
+
+for(i in c(2:nrow(df_dis))){
+  df_dis$Return[i] <- (df_dis$disney[i]-df_dis$disney[i-1])/df_dis$disney[i-1]*100
+  df_ge$Return[i] <- (df_ge$ge[i]-df_ge$ge[i-1])/df_ge$ge[i-1]*100
+}
+##### Plot Returns
+ggplot(data = df_dis) +
+  geom_line(aes(x = Date, y = Return),
+            color = "blue",
+            size = 0.6) +
+  labs(x = "Date",
+       y = "Disney Return") +
+  scale_x_date(date_breaks = "3 years", labels = date_format("%Y %b")) +
+  theme_minimal()+
+  theme_bw()+
+  theme(panel.grid =element_blank())+
+  theme(axis.title.x = element_text(size =12))+
+  theme(axis.title.y = element_text(size =12))+
+  theme(axis.text.x = element_text(size =6))+
+  theme(axis.text.y = element_text(size =12))
+
+
+##### Calculate histogram of returns Disney #####
+disneyReturn <- df_dis$Return
+h1 <- hist(disneyReturn)
+h1
+
+##### Plot Returns
+ggplot(data = df_ge) +
+  geom_line(aes(x = Date, y = Return),
+            color = "blue",
+            size = 0.6) +
+  labs(x = "Date",
+       y = "GE Return") +
+  scale_x_date(date_breaks = "3 years", labels = date_format("%Y %b")) +
+  theme_minimal()+
+  theme_bw()+
+  theme(panel.grid =element_blank())+
+  theme(axis.title.x = element_text(size =12))+
+  theme(axis.title.y = element_text(size =12))+
+  theme(axis.text.x = element_text(size =6))+
+  theme(axis.text.y = element_text(size =12))
+
+
+##### Calculate histogram of returns Disney #####
+geReturn <- df_ge$Return
+h2 <- hist(geReturn)
+h2
+
+```
+
+
+```{r ,echo = FALSE}
+
+df_dis$Excess_Returns <- df_dis$Return - df_dis$rf
+df_ge$Excess_Returns <- df_ge$Return - df_ge$rf
+
+##### Regress the basic model (no robust se) #####
+# library(lmtest)
+Model_1_dis <- lm(Excess_Returns ~
+                mktrf
+              , data=df_dis
+              , na.action=na.exclude)
+coeftest(Model_1_dis)
+stargazer(Model_1_dis, type="text")
+
+Model_1_ge <- lm(Excess_Returns ~
+                mktrf
+              , data=df_ge
+              , na.action=na.exclude)
+coeftest(Model_1_ge)
+stargazer(Model_1_ge, type="text")
+
+Model_2_dis <- lm(Excess_Returns ~
+                mktrf + smb + hml
+              , data=df_dis
+              , na.action=na.exclude)
+coeftest(Model_2_dis)
+stargazer(Model_2_dis, type="text")
+
+Model_2_ge <- lm(Excess_Returns ~
+                mktrf + smb + hml
+              , data=df_ge
+              , na.action=na.exclude)
+coeftest(Model_2_ge)
+stargazer(Model_2_ge, type="text")
+
+##### Save residuals #####
+df_dis$e_1 <- residuals(Model_1_dis)
+df_dis$e_2 <- residuals(Model_2_dis)
+##################################################
+df_ge$e_1 <- residuals(Model_1_ge)
+df_ge$e_2 <- residuals(Model_2_ge)
+
+#################################################4.5.
+
+resid1 <- df_dis$e_1
+h1 <- hist(resid1)
+h1
+
+resid2 <- df_dis$e_2
+h2 <- hist(resid2)
+h2
+
+resid3 <- df_ge$e_1
+h3 <- hist(resid3)
+h3
+
+resid4 <- df_ge$e_2
+h4 <- hist(resid4)
+h4
+
+```

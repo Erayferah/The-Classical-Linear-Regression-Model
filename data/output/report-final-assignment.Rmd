@@ -1,0 +1,73 @@
+---
+title: "final-assignment"
+author: "Eray Ferah"
+date: "26 04 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r technical details for the analysis}
+library(ggplot2)
+library(lmtest)
+library(scales)
+library(lubridate)
+library(stargazer)
+library(readxl)
+
+print(getwd())
+
+# Import data
+df_dis <- read_excel("data/input/disney.xlsx")
+df_dis <- as.data.frame(df_dis)
+df_ge <- read_excel("data/input/ge.xlsx")
+df_ge <- as.data.frame(df_dis)
+
+######define date
+df_dis$Date <- as.Date(paste(df_dis$date, 1), "%Ym%m %d")
+df_ge$Date <- as.Date(paste(df_ge$date, 1), "%Ym%m %d")
+
+```
+
+## Plotting Prices
+
+```{r}
+##### Plot prices #####
+ggplot(data = df_dis) +
+  geom_line(aes(x = Date, y = apple),
+            color = "blue",
+            size = 0.6) +
+  labs(x = "Date",
+       y = "Disney Price") +
+  scale_x_date(date_breaks = "3 years", labels = date_format("%Y %b")) +
+  theme_minimal()+
+  theme_bw()+
+  theme(panel.grid =element_blank())+
+  theme(axis.title.x = element_text(size =12))+
+  theme(axis.title.y = element_text(size =12))+
+  theme(axis.text.x = element_text(size =12))+
+  theme(axis.text.y = element_text(size =12))
+
+ggplot(data = df_ge) +
+  geom_line(aes(x = Date, y = apple),
+            color = "blue",
+            size = 0.6) +
+  labs(x = "Date",
+       y = "GE Price") +
+  scale_x_date(date_breaks = "3 years", labels = date_format("%Y %b")) +
+  theme_minimal()+
+  theme_bw()+
+  theme(panel.grid =element_blank())+
+  theme(axis.title.x = element_text(size =12))+
+  theme(axis.title.y = element_text(size =12))+
+  theme(axis.text.x = element_text(size =12))+
+  theme(axis.text.y = element_text(size =12))
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+
+```
